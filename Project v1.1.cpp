@@ -50,7 +50,6 @@ void worthyPack() {
     }
     getWorthyPackInfo();
     setDist();
-    approachPack(targetNumber);
 }
 
 int itemStat(int num) {
@@ -193,9 +192,7 @@ void approachPack(int targetNumber){
 
 void goAround(int targetNumber)
 {
-    float itemState[12];
     game.getItemZRState(itemState,targetNumber);
-    float itemAtt[3];
     
     for(int i =0; i<3; ++i)
         itemAtt[i] = itemState[6+i];
@@ -283,10 +280,10 @@ void loop(){
             break;
         case 'w':
             worthyPack();
-            /*index = 'p';
+            index = 'p';
             break;
         case 'p':
-            api.setPositionTarget(virtualTarget);*/
+            approachPack(targetNumber);
             api.setAttitudeTarget(pointAtt);
             DEBUG(("%f", dist(myPos, actualTarget)));
             if(dist(myPos, actualTarget)<=distMax && dist(myPos, actualTarget) >= distMin && game.isFacingCorrectItemSide(targetNumber)){
