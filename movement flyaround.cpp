@@ -1,23 +1,3 @@
-int counter;
-
-void movement(float* target_copy)
-{
-    float targ_relative[3];
-    float targ_absolute[3];
-    for(int i =0; i<3; ++i)
-    {
-        targ_absolute[i] = target_copy[i];
-        targ_relative[i] = targ_absolute[i] - myState[i];
-    }
-    
-    float curDis = getDis(myState,targ_absolute);
-    
-    if (curDis>0.7)
-        api.setForces(targ_relative);
-    else
-        api.setPositionTarget(targ_absolute);
-}
-
 void goAround(int num)
 {
     float itemState[12];
@@ -48,31 +28,10 @@ void goAround(int num)
     if (counter % 2 == 0) api.setForces(force_point);
 }
 
-dock_dis[0] = 0.17;
-dock_dis[1] = 0.157;
-dock_dis[2] = 0.143;
-
-
-float itemState[12];
-game.getItemZRState(itemState,num);
-for(int i = 0; i<3; ++i)
-{
-   item_att[i] = itemState[6+i];
-   item_loc[i] = itemState[i];
-   point_att[i] = -item_att[i];
-}
-  mathVecNormalize(item_att,3);
-  float length = mathVecMagnitude(item_att,3);
-  for(int i = 0; i<3; ++i)
-    loc_tofly[i] = item_att[i]*dock_dis[num / 2]/length + item_loc[i];
-float dis_to_point_near = getDis(myState,point_near);
-float dis_to_center = getDis(myState,itemState);
-if ((dis_to_point_near>dis_to center) && (dis_to_point_nea<=0.4))
-{
-    DEBUG(("OBLET"));
-    goAround(num);
-}
+//code to put in taking cubes function:
+    float dis1 = getDis(myState,loc_tofly); //dis to point near of face
+    float dis2 = getDis(myState,itemState); //dis to cube's center
+    if ((dis1>dis2) && (dis2<=0.4))
+        goAround(cube_num);
     else
-{
-    movement(loc_tofly);
-}
+        movement(loc_tofly);
