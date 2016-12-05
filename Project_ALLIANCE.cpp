@@ -42,6 +42,27 @@ void rotateToPoint(float target[3]){
     api.setAttitudeTarget(temp);
 }
 
+void secondSPS(float targetNumber){
+    game.getItemZRState(itemState, targetNumber);
+    game.getItemLoc(actualTarget, targetNumber);
+    for(int i=0; i<3; i++){
+        itemAtt[i] = itemState[i+6];
+        pointAtt[i] = -itemAtt[i];
+    }
+    mathVecNormalize(itemAtt, 3);
+    for(int i=0; i<3; i++)
+        sps[i] = itemAtt[i] * 0.6 + actualTarget[i];
+}
+
+void setZonePoint(){
+    game.getItemLoc(actualTarget, targetNumber);
+    ourZonePos[0] = actualTarget[0];
+    ourZonePos[1] = actualTarget[1];
+    if(actualTarget[2]>0.1)
+        ourZonePos[2] = actualTarget[2] - 0.2;
+    else
+        ourZonePos[2] = actualTarget[2] + 0.2;
+}
 //End page Move
 //Begin page Packs
 void worthyPack() {
@@ -165,7 +186,7 @@ void getItemAtt(float x[3], int targetNumber) {
 }
 //End page Position
 //Begin page approach
-void approachPack(int targetNumber){
+void calcPoint(int targetNumber){
     game.getItemZRState(itemState, targetNumber);
     game.getItemLoc(actualTarget, targetNumber);
     for(int i=0; i<3; i++){
@@ -176,27 +197,23 @@ void approachPack(int targetNumber){
     float length = mathVecMagnitude(itemAtt, 3);
     for(int i=0; i<3; i++)
         virtualTarget[i] = itemAtt[i] * dockDist[targetNumber/2]/length + actualTarget[i];
-    float dis_to_point_near = dist(myState, virtualTarget);
-    float dis_to_center = dist(myState, actualTarget);
-    if ((dis_to_point_near>dis_to_center) && (dis_to_point_near<=0.4))
-    {
-        DEBUG(("OBLET"));
-        goAround(targetNumber);
-    }
-        else
-    {
-        api.setPositionTarget(virtualTarget);
+}
+
+void approachPack(int targetNumber){
+    if(!compareVector(myPos, virtualTarget, 0.005)){
+        float dis_to_point_near = dist(myState, virtualTarget);
+        float dis_to_center = dist(myState, actualTarget);
+        if ((dis_to_point_near>dis_to_center) && (dis_to_point_near<=0.4)){
+            goAround(targetNumber);
+        }
+            else{
+            api.setPositionTarget(virtualTarget);
+        }
     }
 }
 
 
-void goAround(int targetNumber)
-{
-    game.getItemZRState(itemState,targetNumber);
-    
-    for(int i =0; i<3; ++i)
-        itemAtt[i] = itemState[6+i];
-    
+void goAround(int targetNumber){
     float dist[3];
     float max=-1;
     int max_num=-1;
@@ -225,6 +242,7 @@ float   itemState[12];
 float   itemAtt[3];
 float   pointAtt[3];
 float   dockDist[6];
+float   sps[3];
 
 float   virtualTarget[3];  //target information
 float   actualTarget[3];
@@ -236,58 +254,64 @@ float   distMax;
 float   ranking[4];
 
 float   ourZone[3];     //assembly zones
+float   ourZonePos[3];
 float   theirZone[3];
 
 char    index;    //switch index
 bool    check;
+bool    checkZone;
 
 int     counter;
 
 void init(){
-    if (ourColor() == 'B'){
-        assign(actualTarget, -0.65, 0.65, 0.0);
-        assign(virtualTarget, 0.65, 0.5, 0.5);
-    }
-    else{
-        assign(actualTarget, 0.65, -0.65, 0.0);
-        assign(virtualTarget, 0.65, -0.5, -0.5);
-    }
     dockDist[0] = 0.173;
 	dockDist[1] = 0.160;
     dockDist[2] = 0.146;
-    index = 'f';
+    index = 'w';
     game.dropSPS();
     check = true;
+    checkZone = true;
 }
 
 void loop(){
     getMyPos(myPos);
+    DEBUG(("%d", targetNumber));
     switch(index){
-        case 'f':
-            if(!compareVector(myPos, actualTarget, 0.15))
-                api.setPositionTarget(actualTarget);
+        case 'w':
+            if(!checkZone){
+                    setZonePoint();
+                    checkZone = false;
+            }
+            worthyPack();
+            if(check)
+                index = 'f';
             else{
-                game.dropSPS();
-                if(check){
-                    copyArray(virtualTarget, actualTarget, 0, 3);
-                    check = false;
-                }
-                else{
-                    zoneInfo();
-                    index = 'w';
-                }
+                index = 'p';
+                calcPoint(targetNumber);
             }
             break;
-        case 'w':
-            worthyPack();
-            index = 'p';
+        case 'f':
+            secondSPS(targetNumber);
+            if(!compareVector(myPos, sps, 0.15))
+                api.setPositionTarget(sps);
+            else{
+                game.dropSPS();
+                index = 'p';
+            }
             break;
         case 'p':
+            if(check)
+                calcPoint(targetNumber);
             approachPack(targetNumber);
             api.setAttitudeTarget(pointAtt);
             DEBUG(("%f", dist(myPos, actualTarget)));
             if(dist(myPos, actualTarget)<=distMax && dist(myPos, actualTarget) >= distMin && game.isFacingCorrectItemSide(targetNumber)){
                 if(game.dockItem(targetNumber) && game.hasItem(targetNumber) == 1){
+                    if(check){
+                        game.dropSPS();
+                        zoneInfo();
+                        check = false;
+                    }
                     index = 'z';
                 }
             }
@@ -302,5 +326,4 @@ void loop(){
             break;
     }
 }
-
 //End page main
