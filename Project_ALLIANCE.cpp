@@ -63,9 +63,9 @@ void setZonePoint(){
     ourZonePos[0] = actualTarget[0];
     ourZonePos[1] = actualTarget[1];
     if(actualTarget[2]>0.1)
-        ourZonePos[2] = actualTarget[2] - 0.2;
+        ourZonePos[2] = actualTarget[2] - 0.1;
     else
-        ourZonePos[2] = actualTarget[2] + 0.2;
+        ourZonePos[2] = actualTarget[2] + 0.1;
 }
 
 /*calculates the universal dropping point*/
@@ -205,12 +205,14 @@ void getMyPos(float x[3]) {
 
 /*we get our position*/
 
-void getItemAtt(float x[3], int targetNumber) {
-    game.getItemZRState(itemState, targetNumber);
-    copyArray(itemState, x, 4, 3);
-}
 
-/* we get the item attitude*/
+bool checkSPSPos(float point[3]){
+    if(point[0] > 0.64 || point[0] < -0.64 || point[1] > 0.80 || point[1] < -0.80 || point[2] > 0.64 || point[2] < -0.64 
+    || (compareVector(startingPos, point, 0.1)))
+        return true;
+    else
+        return false;
+}
 //End page Position
 //Begin page approach
 void calcPoint(int targetNumber){
@@ -251,11 +253,9 @@ void goAround(int targetNumber){
     float dist[3];
     float max=-1;
     int max_num=-1;
-    for(int i = 0; i<3; ++i)
-    {
+    for(int i = 0; i<3; ++i){
         dist[i] = fabsf(myState[i]-itemState[i]);
-        if (dist[i]>max)
-        {
+        if (dist[i]>max){
             max = dist[i];
             max_num = i;
         }
@@ -274,6 +274,7 @@ void goAround(int targetNumber){
 //Begin page main
 float   myState[12];            //status of the sphere
 float   myPos[3];               //our position
+float   startingPos[3];
 float   itemState[12];          //state of the item
 float   itemAtt[3];             //attitude of the item
 float   pointAtt[3];            //point attitude
@@ -286,6 +287,7 @@ float   distFromTarget;         //distance from our target
 int     targetNumber;           //ID of the item
 float   distMin;                //minimum distance of docking
 float   distMax;                //maximum distance of docking
+float   startDis;
 
 float   ranking[4];             //vector that is used to calculate which item is the worthiest
 
@@ -300,6 +302,8 @@ bool    calculated;             //check if the virtualPoint is calculated
 int     counter;                //counter used to fly around objects
 
 void init(){
+    getMyPos(myPos);
+    copyArray(myPos, startingPos, 0, 3);
     dockDist[0] = 0.173;
 	dockDist[1] = 0.160;        //we're setting distances
     dockDist[2] = 0.146;
@@ -308,11 +312,13 @@ void init(){
     check = true;               //setting bools 
     checkZone = true;
     calculated = false;
+    secondSPS(targetNumber);
 }
 
 void loop(){
     getMyPos(myPos);                            //we get our position because we always need that information
-    DEBUG(("%d", targetNumber));
+    if((game.getFuelRemaining() <= 20 || game.getCurrentTime() >= 150) && index == 'w')
+        index = 'f';
     switch(index){
         case 'w':
             if(!checkZone){
@@ -320,15 +326,20 @@ void loop(){
             }
             worthyPack();
             if(check)
-                index = 'f';
+                index = 's';
             else
                 index = 'p';
             break;
         /*we call worthyPack to see what is the worthiest pack to pick up. If we didn't place the SPS we will go to case F and place it, 
         otherwise we will go for packs. we calculate here the virtual point or we would follow the pack if it starts moving*/
-        case 'f':
-            secondSPS(targetNumber);
-            if(!compareVector(myPos, sps, 0.15))
+        case 's':
+            if(checkSPSPos(sps)){
+                if(ourColor() == 'B')
+                    assign(sps, 0.0, -0.15, 0.55);
+                else
+                    assign(sps, 0.0, 0.15, 0.55);
+            }
+            if(!compareVector(myPos, sps, 0.10))
                 api.setPositionTarget(sps);
             else{
                 game.dropSPS();
@@ -337,8 +348,9 @@ void loop(){
             break;
         /*we calculate the position of the second SPS based on the position of the first worthyPack we find*/
         case 'p':
-            calcPoint(targetNumber);
-            if(calculated){
+            if(!calculated)
+                calcPoint(targetNumber);
+            else{
                 approachPack(targetNumber);
                 api.setAttitudeTarget(pointAtt);
                 DEBUG(("%f", dist(myPos, actualTarget)));
@@ -353,21 +365,28 @@ void loop(){
                     }
                 }
             }
-            else
+            if(game.hasItem(targetNumber) == 2)
                 index = 'w';
             break;
         /*we calculate the approach point. if the pack is moving we return to worthyPack, otherwise we go and dock the item. The first
         dock will place the last SPS and get the ZoneInfo*/
         case 'z':
             rotateToPoint(ourZone);
-            api.setPositionTarget(ourZone);
+            if(checkZone)
+                api.setPositionTarget(ourZone);
+            else
+                api.setPositionTarget(ourZonePos);
             if(packInZone()){
                 game.dropItem();
                 index = 'w';
                 checkZone = false;
+                calculated = false;
             }
             break;
         /*we drop the item in the zone. the first time we drop the item and calculate an universal dropping point*/
+        case 'f':
+            api.setPositionTarget(ourZone);
+        break;
     }
 }
 //End page main
