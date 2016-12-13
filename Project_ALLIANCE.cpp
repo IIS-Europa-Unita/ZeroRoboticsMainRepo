@@ -141,13 +141,15 @@ void setDist(){
     switch(targetNumber){
         case 0:
         case 1:
-            distFromTarget = .182; 
+            //distFromTarget = .182;
+            distFromTarget = .162;
             distMin = 0.151;
             distMax = 0.173;
             break;
         case 2:
         case 3:
-            distFromTarget = .1725;
+            //distFromTarget = .1725;
+            distFromTarget = .143;
             distMin = 0.138;
             distMax = 0.160;
             break;
@@ -208,7 +210,7 @@ void getMyPos() {
 
 bool checkSPSPos(float point[3]){
     if(point[0] > 0.64 || point[0] < -0.64 || point[1] > 0.80 || point[1] < -0.80 || point[2] > 0.64 || point[2] < -0.64 
-    || (compareVector(startingPos, point, 0.1)))
+    || (compareVector(startingPos, point, 0.2)))
         return true;
     else
         return false;
@@ -226,7 +228,7 @@ void calcPoint(){
         mathVecNormalize(itemAtt, 3);
         float length = mathVecMagnitude(itemAtt, 3);
         for(int i=0; i<3; i++)
-            virtualTarget[i] = itemAtt[i] * dockDist[targetNumber/2]/length + actualTarget[i];
+            virtualTarget[i] = itemAtt[i] * distFromTarget/length*0.99 + actualTarget[i];
         calculated = true;
     }
 }
@@ -235,8 +237,8 @@ void calcPoint(){
 
 void approachPack(){
     if(!compareVector(myPos, virtualTarget, 0.005)){
-        float dis_to_point_near = dist(myState, virtualTarget);
-        float dis_to_center = dist(myState, actualTarget);
+        float dis_to_point_near = dist(myPos, virtualTarget);
+        float dis_to_center = dist(myPos, actualTarget);
         if ((dis_to_point_near>dis_to_center) && (dis_to_point_near<=0.4)){
             goAround();
         }
@@ -278,7 +280,6 @@ float   startingPos[3];
 float   itemState[12];          //state of the item
 float   itemAtt[3];             //attitude of the item
 float   pointAtt[3];            //point attitude
-float   dockDist[6];            //docking distances
 float   sps[3];                 //point to place SPS
 
 float   virtualTarget[3];       //we calculate and fly to this point
@@ -304,14 +305,16 @@ short int     counter;                //counter used to fly around objects
 void init(){
     getMyPos();
     copyArray(myPos, startingPos, 0, 3);
-    dockDist[0] = 0.173;
-	dockDist[1] = 0.160;        //we're setting distances
-    dockDist[2] = 0.146;
-    index = 'w';                //index starts here
+    index = 's';                //index starts here
     game.dropSPS();             //we drop the first SPS at our starting point
     check = true;               //setting bools 
     checkZone = true;
     calculated = false;
+    if(ourColor() == 'B')
+        targetNumber = 0;
+    else
+        targetNumber = 1;
+    setDist();
 }
 
 void loop(){
