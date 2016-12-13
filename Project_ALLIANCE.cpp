@@ -288,7 +288,6 @@ float   distFromTarget;         //distance from our target
 short int     targetNumber;           //ID of the item
 float   distMin;                //minimum distance of docking
 float   distMax;                //maximum distance of docking
-float   startDis;
 
 float   ranking[4];             //vector that is used to calculate which item is the worthiest
 
@@ -339,7 +338,7 @@ void loop(){
                 if(ourColor() == 'B')
                     assign(sps, 0.0, -0.15, 0.55);
                 else
-                    assign(sps, 0.0, 0.15, 0.55);
+                    assign(sps, 0.0, 0.15, -0.55);
             }
             if(!compareVector(myPos, sps, 0.10))
                 api.setPositionTarget(sps);
