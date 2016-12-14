@@ -44,19 +44,6 @@ void rotateToPoint(float target[3]){
 
 /*rotates to a point*/
 
-void secondSPS(){
-    game.getItemZRState(itemState, targetNumber);
-    game.getItemLoc(actualTarget, targetNumber);
-    for(int i=0; i<3; i++){
-        itemAtt[i] = itemState[i+6];
-        pointAtt[i] = -itemAtt[i];
-    }
-    mathVecNormalize(itemAtt, 3);
-    for(int i=0; i<3; i++)
-        sps[i] = itemAtt[i] * 0.6 + actualTarget[i];
-}
-
-/*calculates the second SPS placing point based on pack attitude*/
 
 void setZonePoint(){
     game.getItemLoc(actualTarget, targetNumber);
@@ -206,15 +193,6 @@ void getMyPos() {
 }
 
 /*we get our position*/
-
-
-bool checkSPSPos(float point[3]){
-    if(point[0] > 0.64 || point[0] < -0.64 || point[1] > 0.80 || point[1] < -0.80 || point[2] > 0.64 || point[2] < -0.64 
-    || (compareVector(startingPos, point, 0.2)))
-        return true;
-    else
-        return false;
-}
 //End page Position
 //Begin page approach
 void calcPoint(){
@@ -276,11 +254,11 @@ void goAround(){
 //Begin page main
 float   myState[12];            //status of the sphere
 float   myPos[3];               //our position
-float   startingPos[3];
 float   itemState[12];          //state of the item
 float   itemAtt[3];             //attitude of the item
 float   pointAtt[3];            //point attitude
-float   sps[3];                 //point to place SPS
+float   second[3];                 //point to place SPS
+float   third[3];
 
 float   virtualTarget[3];       //we calculate and fly to this point
 float   actualTarget[3];        //actual location of an item
@@ -303,16 +281,19 @@ short int     counter;                //counter used to fly around objects
 
 void init(){
     getMyPos();
-    copyArray(myPos, startingPos, 0, 3);
     index = 's';                //index starts here
     game.dropSPS();             //we drop the first SPS at our starting point
     check = true;               //setting bools 
     checkZone = true;
     calculated = false;
-    if(ourColor() == 'B')
-        targetNumber = 0;
-    else
-        targetNumber = 1;
+    if(ourColor() == 'B'){
+        assign(second, 0.0, 0.15, 0.60);
+        assign(third, 0.60, 0.0, 0.60);
+    }
+    else{
+        assign(second, 0.0, 0.0, -0.60);
+        assign(third, -0.60, 0.0, -0.60);
+    }
     setDist();
 }
 
@@ -322,32 +303,31 @@ void loop(){
         index = 'f';
     switch(index){
         case 'w':
-            if(!checkZone){
-                    setZonePoint();
-            }
+            if(!checkZone)
+                setZonePoint();
             worthyPack();
-            if(check)
-                index = 's';
-            else
-                index = 'p';
+            index = 'p';
             break;
         /*we call worthyPack to see what is the worthiest pack to pick up. If we didn't place the SPS we will go to case F and place it, 
         otherwise we will go for packs. we calculate here the virtual point or we would follow the pack if it starts moving*/
         case 's':
-            if(checkSPSPos(sps)){
-                if(ourColor() == 'B')
-                    assign(sps, 0.0, -0.15, 0.55);
-                else
-                    assign(sps, 0.0, 0.15, -0.55);
-            }
-            if(!compareVector(myPos, sps, 0.10))
-                api.setPositionTarget(sps);
+            if(!compareVector(myPos, second, 0.10))
+                api.setPositionTarget(second);
             else{
                 game.dropSPS();
-                index = 'p';
+                index = '3';
             }
             break;
         /*we calculate the position of the second SPS based on the position of the first worthyPack we find*/
+        case '3':
+            if(!compareVector(myPos, third, 0.10))
+                api.setPositionTarget(third);
+            else{
+                game.dropSPS();
+                index = 'w';
+            }
+            break;
+        /* */
         case 'p':
             if(!calculated)
                 calcPoint();
@@ -377,6 +357,8 @@ void loop(){
                 api.setPositionTarget(ourZone);
             else
                 api.setPositionTarget(ourZonePos);
+            if(dist(myPos, ourZone) < 0.2))
+                ourZone[2]-= 0.2;
             if(packInZone()){
                 game.dropItem();
                 index = 'w';
