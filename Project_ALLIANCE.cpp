@@ -165,15 +165,6 @@ void setDist(){
 /*set docking distances based on pack. (probably useless with the new functions we're using) */
 //End page Packs
 //Begin page Position
-char ourColor(){
-    if(myPos[1] > 0)
-        return 'B';
-    else
-        return 'R';
-}
-
-/*we learn our color. Is it relevant in alliance?*/
-
 void zoneInfo(){
     game.getZone(zoneData);
     //for(int i = 0; i < 3; i++, ourZone[i] = zoneData[i], theirZone[i] = -zoneData[i]);      //some memory more
@@ -269,7 +260,7 @@ void init(){
     index = 's';                //index starts here
     game.dropSPS();             //we drop the first SPS at our starting point
     calculated = false;
-    if(myPos[1]){
+    if(myPos[1]>0){
         assign(sps, -0.40, 0.40, 0.0);
     }
     else{
