@@ -212,7 +212,7 @@ void getMyPos() {
 bool packInZone(){
     float temp[3];
     game.getItemLoc(temp, targetNumber);
-    if(dist(temp, ourZone) < 0.07)
+    if(dist(temp, ourZone) < 0.06)
         return true;
     else 
         return false; 
@@ -290,7 +290,9 @@ void loop(){
         
     if(packIsMoving(targetNumber) &&  game.getNumSPSHeld() == 0 && index != 'z')
         index = 'p';
-    switch(index){
+    if(game.hasItem(targetNumber) == 2)
+        index = 'p';
+        switch(index){
         /*we call worthyPack to see what is the worthiest pack to pick up. If we didn't place the SPS we will go to case F and place it, 
         otherwise we will go for packs. we calculate here the virtual point or we would follow the pack if it starts moving*/
         case 's':
