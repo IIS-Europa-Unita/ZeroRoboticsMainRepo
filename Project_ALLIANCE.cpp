@@ -52,7 +52,7 @@ void moveTo(float* target){
     
     float curDis = dist(myState, target);
     
-    if (curDis >= 0.05){ // distance on what it really shouldnt apply forces
+    if (curDis >= 0.1){ // distance on what it really shouldnt apply forces
         if (counter % 4 == 0) api.setForces(between); //frequency of applying forces. frequency is more when number is less 
         counter++;
     }
@@ -80,7 +80,7 @@ void goAround(int targetNumber){
     mathVecAdd(c, forcePoint, itemAtt, 3);
     mathVecNormalize(c, 3);
     for(int i = 0; i < 3; ++ i)
-        c[i]/=5;
+        c[i]/=10;
     mathVecAdd(b, virtualTarget, c, 3);
     moveTo(b);
 }
@@ -234,6 +234,16 @@ void calcPoint(){
 }
 
 /*this function calculates the docking point based on the position, attitude and type of item*/
+
+bool rightSpeed(){
+    float myVel[3];
+    for(int i=0; i < 3; ++i)
+            myVel[i] = myState[i+3];
+    if (mathVecMagnitude(myVel, 3) < 0.01)
+        return true;
+    else
+        return false;
+}
 //End page Position
 //Begin page main
 float   myState[12];            //status of the sphere
@@ -290,7 +300,7 @@ void loop(){
         
     if(packIsMoving(targetNumber) &&  game.getNumSPSHeld() == 0 && index != 'z')
         index = 'p';
-    if(game.hasItem(targetNumber) == 2)
+    if(game.hasItem(targetNumber) == 2 || packIsMoving(targetNumber))
         index = 'p';
         switch(index){
         /*we call worthyPack to see what is the worthiest pack to pick up. If we didn't place the SPS we will go to case F and place it, 
@@ -315,7 +325,7 @@ void loop(){
             approachPack();
             api.setAttitudeTarget(pointAtt);
             DEBUG(("DIST FROM TARGET: %f", dist(myPos, actualTarget)));
-            if(dist(myPos, actualTarget)<=distMax && dist(myPos, actualTarget) >= distMin && game.isFacingCorrectItemSide(targetNumber)){
+            if(dist(myPos, actualTarget)<=distMax && dist(myPos, actualTarget) >= distMin && game.isFacingCorrectItemSide(targetNumber) && rightSpeed()){
                 if(game.dockItem(targetNumber) && game.hasItem(targetNumber) == 1){
                     if(first){
                         game.dropSPS();
