@@ -176,7 +176,6 @@ char ourColor(){
 /*we learn our color. Is it relevant in alliance?*/
 
 void zoneInfo(){
-    float zoneData[4];
     game.getZone(zoneData);
     assign(ourZone, zoneData[0], zoneData[1], zoneData[2]);
     assign(theirZone, zoneData[0]*(-1), zoneData[1]*(-1), zoneData[2]*(-1));
@@ -212,7 +211,7 @@ void getMyPos() {
 bool packInZone(){
     float temp[3];
     game.getItemLoc(temp, targetNumber);
-    if(dist(temp, ourZone) < 0.06)
+    if(dist(temp, ourZone) < 0.22 - zoneData[3])
         return true;
     else 
         return false; 
@@ -243,6 +242,7 @@ float   itemState[12];          //state of the item
 float   itemAtt[3];             //attitude of the item
 float   pointAtt[3];            //point attitude
 float   sps[3];
+float   zoneData[4];
 
 float   virtualTarget[3];       //we calculate and fly to this point
 float   actualTarget[3];        //actual location of an item
