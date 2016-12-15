@@ -52,7 +52,7 @@ void moveTo(float* target){
     
     float curDis = dist(myState, target);
     
-    if (curDis >= 0.1){ // distance on what it really shouldnt apply forces
+    if (curDis >= 0.05){ // distance on what it really shouldnt apply forces
         if (counter % 4 == 0) api.setForces(between); //frequency of applying forces. frequency is more when number is less 
         counter++;
     }
@@ -62,15 +62,15 @@ void moveTo(float* target){
 
 void goAround(int targetNumber){
     game.getItemZRState(itemState, targetNumber);
-    float itemAtt[3], dist[3], b[3], c[3], forcePoint[3];
+    float itemAtt[3], dist, b[3], c[3], forcePoint[3];
     float max=-1;
     int max_num=-1;
     for(int i =0; i<3; ++i)
         itemAtt[i] = itemState[6+i];
     for(int i = 0; i<3; ++i){
-        dist[i] = fabsf(myState[i]-itemState[i]);
-        if (dist[i]>max){
-            max = dist[i];
+        dist = fabsf(myState[i]-itemState[i]);
+        if (dist>max){
+            max = dist;
             max_num = i;
         }
     }
