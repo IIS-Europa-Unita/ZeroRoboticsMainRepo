@@ -200,7 +200,7 @@ void getMyPos() {
 bool packInZone(){
     float temp[3];
     game.getItemLoc(temp, targetNumber);
-    return(dist(temp, ourZone) < 0.05);
+    return(compareVector(temp, ourZone, 0.05));
 }
 
 void calcPoint(){
