@@ -53,7 +53,7 @@ void moveTo(float* target){
     float curDis = dist(myState, target);
     
     if (curDis >= 0.05){ // distance on what it really shouldnt apply forces
-        if (counter % 4 == 0) api.setForces(between); //frequency of applying forces. frequency is more when number is less 
+        if (counter % 3 == 0) api.setForces(between); //frequency of applying forces. frequency is more when number is less 
         counter++;
     }
     api.setPositionTarget(target);
@@ -80,7 +80,7 @@ void goAround(int targetNumber){
     mathVecAdd(c, forcePoint, itemAtt, 3);
     mathVecNormalize(c, 3);
     for(int i = 0; i < 3; ++ i)
-        c[i]/=10;
+        c[i]/=4;
     mathVecAdd(b, virtualTarget, c, 3);
     moveTo(b);
 }
