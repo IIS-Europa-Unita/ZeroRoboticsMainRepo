@@ -1,8 +1,8 @@
 //Begin page Misc
-void copyArray(float *src, float *dest, int inPos, int dim){
+/*void copyArray(float *src, float *dest, int inPos, int dim){
     for(int i = inPos;i < dim;i++)
         dest[i]=src[i];
-}
+}*/
 
 bool compareVector(float a[], float b[], float approx){
     if  (((a[0] < (b[0]+approx))&&(a[0] > (b[0]-approx))) &&
@@ -166,7 +166,6 @@ void setDist(){
 //End page Packs
 //Begin page Position
 char ourColor(){
-    getMyPos();
     if(myPos[1] > 0)
         return 'B';
     else
@@ -177,8 +176,9 @@ char ourColor(){
 
 void zoneInfo(){
     game.getZone(zoneData);
-    assign(ourZone, zoneData[0], zoneData[1], zoneData[2]);
-    assign(theirZone, zoneData[0]*(-1), zoneData[1]*(-1), zoneData[2]*(-1));
+    for(int i = 0; i < 3; i++, ourZone[i] = zoneData[i], theirZone[i] = -zoneData[i]);      //some memory more
+    /*assign(ourZone, zoneData[0], zoneData[1], zoneData[2]);
+    assign(theirZone, zoneData[0]*(-1), zoneData[1]*(-1), zoneData[2]*(-1));*/
 }
 
 /*we get the location of our and their zone*/
@@ -192,17 +192,15 @@ bool packIsMoving(int id){
 bool packInTheirZone(int id){
     float temp[3];
     game.getItemLoc(temp, id);
-    if(compareVector(temp, theirZone, 0.08))
-        return true;
-    else
-        return false;
+    return(compareVector(temp, theirZone, 0.08));
 }
 
 /*we check if a pack is in their zone or not*/
 
 void getMyPos() {
     api.getMyZRState(myState);
-    copyArray(myState, myPos, 0, 3);
+    for(int i = 0; i < 3; i++, myPos[i] = myState[i]);
+    //copyArray(myState, myPos, 0, 3);
 }
 
 /*we get our position*/
@@ -211,10 +209,7 @@ void getMyPos() {
 bool packInZone(){
     float temp[3];
     game.getItemLoc(temp, targetNumber);
-    if(dist(temp, ourZone) < 0.22 - zoneData[3])
-        return true;
-    else 
-        return false; 
+    return(dist(temp, ourZone) < 0.22 - zoneData[3]);
 }
 
 void calcPoint(){
@@ -239,10 +234,7 @@ bool rightSpeed(){
     float myVel[3];
     for(int i=0; i < 3; ++i)
             myVel[i] = myState[i+3];
-    if (mathVecMagnitude(myVel, 3) < 0.01)
-        return true;
-    else
-        return false;
+    return(mathVecMagnitude(myVel, 3) < 0.01);
 }
 //End page Position
 //Begin page main
