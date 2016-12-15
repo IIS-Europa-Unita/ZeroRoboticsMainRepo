@@ -43,19 +43,6 @@ void rotateToPoint(float target[3]){
 }
 
 /*rotates to a point*/
-
-
-void setZonePoint(){
-    game.getItemLoc(actualTarget, targetNumber);
-    ourZonePos[0] = actualTarget[0];
-    ourZonePos[1] = actualTarget[1];
-    if(actualTarget[2]>0.1)
-        ourZonePos[2] = actualTarget[2] - 0.1;
-    else
-        ourZonePos[2] = actualTarget[2] + 0.1;
-}
-
-/*calculates the universal dropping point*/
 //End page Move
 //Begin page Packs
 void worthyPack() {
@@ -81,18 +68,19 @@ int itemStat(int num) {
 /* we check if the pack is in our or their zone to calculate the real rating of the item*/
 
 void getRank(int num) {
+    game.getItemZRState(itemState, num);
     float target[3];
     getMyPos();
     game.getItemLoc(target, num);
-    ranking[num] = 1/(dist(myPos, target));
+    ranking[num] = 1/(((dist(myPos, target)*dist(myPos, target))));
     switch(num){
         case 0:   //large
         case 1:
-            ranking[num]*=4.5;
+            ranking[num]*=2.5;
             break;
         case 2:   //medium
         case 3:
-            ranking[num]*=2.5;
+            ranking[num]*=1.5;
             break;
     }
     switch(itemStat(num)){
@@ -103,8 +91,15 @@ void getRank(int num) {
             ranking[num]*=1.75;
             break;
         default:
-            ranking[num]*=-100;
+            ranking[num]*=0;
             break;
+    }
+    if(dist(target, theirPos) < 0.1 && packInTheirZone(num))
+        ranking[num]*=0;
+    game.getItemZRState(itemState, num);
+    if(itemState[3] != 0.00 || itemState[4] != 0.00 || itemState[5] != 0.00){
+        ranking[num]*=0;
+        //DEBUG(("BLYAT CYKA PUTIN KURWA"));
     }
 }
 
@@ -128,14 +123,12 @@ void setDist(){
     switch(targetNumber){
         case 0:
         case 1:
-            //distFromTarget = .182;
             distFromTarget = .162;
             distMin = 0.151;
             distMax = 0.173;
             break;
         case 2:
         case 3:
-            //distFromTarget = .1725;
             distFromTarget = .143;
             distMin = 0.138;
             distMax = 0.160;
@@ -188,11 +181,14 @@ bool packInTheirZone(int id){
 /*we check if a pack is in their zone or not*/
 
 void getMyPos() {
-    api.getMyZRState(myState);
-    copyArray(myState, myPos, 0, 3);
+    api.getMyZRState(myPos);
 }
 
 /*we get our position*/
+
+void getTheirPos(){
+    api.getOtherZRState(theirPos);
+}
 //End page Position
 //Begin page approach
 void calcPoint(){
@@ -254,37 +250,40 @@ void goAround(){
 //Begin page main
 float   myState[12];            //status of the sphere
 float   myPos[3];               //our position
+float   theirPos[3];
 float   itemState[12];          //state of the item
 float   itemAtt[3];             //attitude of the item
 float   pointAtt[3];            //point attitude
-float   second[3];                 //point to place SPS
+float   second[3];              //point to place SPS
 float   third[3];
+float   dropPos[3];
+float   dropZone[3];
+float   temp[3];
 
 float   virtualTarget[3];       //we calculate and fly to this point
 float   actualTarget[3];        //actual location of an item
 float   distFromTarget;         //distance from our target
-short int     targetNumber;           //ID of the item
+int     targetNumber;           //ID of the item
 float   distMin;                //minimum distance of docking
 float   distMax;                //maximum distance of docking
 
 float   ranking[4];             //vector that is used to calculate which item is the worthiest
 
 float   ourZone[3];             //our assembly zone
-float   ourZonePos[3];          //virtual point calculated to never fail the drop in zone
 float   theirZone[3];           //they assembly zone
 
 char    index;                  //switch index
-bool    check;                  //check if SPS is placed
-bool    checkZone;              //check if we have the first item in zone
 bool    calculated;             //check if the virtualPoint is calculated
-short int     counter;                //counter used to fly around objects
+int     counter;                //counter used to fly around objects
+int     packsInZone;
 
 void init(){
+    //DEBUG(("CE REPIGLIAMMO TUTTO CHILLO CH'ERA 'O NUOSTRO!"));
+    packsInZone = 0;
     getMyPos();
+    getTheirPos();
     index = 's';                //index starts here
     game.dropSPS();             //we drop the first SPS at our starting point
-    check = true;               //setting bools 
-    checkZone = true;
     calculated = false;
     if(ourColor() == 'B'){
         assign(second, 0.0, 0.15, 0.60);
@@ -299,15 +298,15 @@ void init(){
 
 void loop(){
     getMyPos();                            //we get our position because we always need that information
-    if((game.getFuelRemaining() <= 20 || game.getCurrentTime() >= 150) && index == 'w')
+    packsInZone = 0;
+    for(int i = 0; i < 4; i++){
+        game.getItemLoc(temp, i);
+        if(compareVector(ourZone, temp, 0.05))  //count num of packs in our zone
+            packsInZone++;
+        }
+    if((game.getCurrentTime() >= 140 || packsInZone == 2) && index == 'p' ) //if time is low or we have 2 packs we go def
         index = 'f';
     switch(index){
-        case 'w':
-            if(!checkZone)
-                setZonePoint();
-            worthyPack();
-            index = 'p';
-            break;
         /*we call worthyPack to see what is the worthiest pack to pick up. If we didn't place the SPS we will go to case F and place it, 
         otherwise we will go for packs. we calculate here the virtual point or we would follow the pack if it starts moving*/
         case 's':
@@ -324,52 +323,48 @@ void loop(){
                 api.setPositionTarget(third);
             else{
                 game.dropSPS();
-                index = 'w';
+                zoneInfo();
+                index = 'p';
             }
             break;
         /* */
         case 'p':
+            worthyPack();
             if(!calculated)
                 calcPoint();
             else{
+                DEBUG(("GETTING PACK %d", targetNumber));
                 approachPack();
                 api.setAttitudeTarget(pointAtt);
-                DEBUG(("%f", dist(myPos, actualTarget)));
+                DEBUG(("DIST FROM TARGET: %f", dist(myPos, actualTarget)));
                 if(dist(myPos, actualTarget)<=distMax && dist(myPos, actualTarget) >= distMin && game.isFacingCorrectItemSide(targetNumber)){
                     if(game.dockItem(targetNumber) && game.hasItem(targetNumber) == 1){
-                        if(check){
-                            game.dropSPS();
-                            zoneInfo();
-                            check = false;
-                        }
+                        game.dropSPS();
+                        assign(dropPos, myPos[0], myPos[1], myPos[2]);
                         index = 'z';
                     }
                 }
             }
-            if(game.hasItem(targetNumber) == 2)
-                index = 'w';
             break;
         /*we calculate the approach point. if the pack is moving we return to worthyPack, otherwise we go and dock the item. The first
         dock will place the last SPS and get the ZoneInfo*/
         case 'z':
+            DEBUG(("RUSH B"));
             rotateToPoint(ourZone);
-            if(checkZone)
                 api.setPositionTarget(ourZone);
-            else
-                api.setPositionTarget(ourZonePos);
-            if(dist(myPos, ourZone) < 0.2))
-                ourZone[2]-= 0.2;
+            if((dist(dropPos, ourZone) < 0.2))
+                assign(dropZone, ourZone[0], ourZone[1], ourZone[2] - 0.2);
             if(packInZone()){
                 game.dropItem();
-                index = 'w';
-                checkZone = false;
+                index = 'p';
                 calculated = false;
             }
             break;
         /*we drop the item in the zone. the first time we drop the item and calculate an universal dropping point*/
         case 'f':
+            //DEBUG(("VUO FA' CODICE E CODICE? PO PO PO"));
             api.setPositionTarget(ourZone);
-        break;
+            break;
     }
 }
 //End page main
