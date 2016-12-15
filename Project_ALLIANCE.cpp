@@ -300,7 +300,7 @@ void loop(){
         
     if(packIsMoving(targetNumber) &&  game.getNumSPSHeld() == 0 && index != 'z')
         index = 'p';
-    if(game.hasItem(targetNumber) == 2 || packIsMoving(targetNumber))
+    if(game.hasItem(targetNumber) == 2 || (packIsMoving(targetNumber) && index != 's'))
         index = 'p';
         switch(index){
         /*we call worthyPack to see what is the worthiest pack to pick up. If we didn't place the SPS we will go to case F and place it, 
