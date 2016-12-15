@@ -80,7 +80,7 @@ void goAround(int targetNumber){
     mathVecAdd(c, forcePoint, itemAtt, 3);
     mathVecNormalize(c, 3);
     for(int i = 0; i < 3; ++ i)
-        c[i]/=12;
+        c[i]/=5;
     mathVecAdd(b, virtualTarget, c, 3);
     moveTo(b);
 }
@@ -268,10 +268,10 @@ void init(){
     game.dropSPS();             //we drop the first SPS at our starting point
     calculated = false;
     if(ourColor() == 'B'){
-        assign(sps, -0.45, 0.40, 0.0);
+        assign(sps, -0.40, 0.40, 0.0);
     }
     else{
-        assign(sps, 0.45, 0.40, 0.0);
+        assign(sps, 0.40, -0.40, 0.0);
     }
     first = true;
     setDist();
