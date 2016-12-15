@@ -1,8 +1,8 @@
 //Begin page Misc
-/*void copyArray(float *src, float *dest, int inPos, int dim){
+void copyArray(float *src, float *dest, int inPos, int dim){
     for(int i = inPos;i < dim;i++)
         dest[i]=src[i];
-}*/
+}
 
 bool compareVector(float a[], float b[], float approx){
     if  (((a[0] < (b[0]+approx))&&(a[0] > (b[0]-approx))) &&
@@ -26,12 +26,12 @@ float dist(float myPos[], float targetPos[]){
 }
 
 
-bool compare(float dist, float min, float max){
+/*bool compare(float dist, float min, float max){
     if(dist >= min && dist <= max )
         return true;
     else
         return false;
-}
+}*/
 //End page Misc
 //Begin page Movement
 void rotateToPoint(float target[3]){
@@ -176,16 +176,16 @@ char ourColor(){
 
 void zoneInfo(){
     game.getZone(zoneData);
-    for(int i = 0; i < 3; i++, ourZone[i] = zoneData[i], theirZone[i] = -zoneData[i]);      //some memory more
-    /*assign(ourZone, zoneData[0], zoneData[1], zoneData[2]);
-    assign(theirZone, zoneData[0]*(-1), zoneData[1]*(-1), zoneData[2]*(-1));*/
+    //for(int i = 0; i < 3; i++, ourZone[i] = zoneData[i], theirZone[i] = -zoneData[i]);      //some memory more
+    assign(ourZone, zoneData[0], zoneData[1], zoneData[2]);
+    assign(theirZone, zoneData[0]*(-1), zoneData[1]*(-1), zoneData[2]*(-1));
 }
 
 /*we get the location of our and their zone*/
 
 
 bool packIsMoving(int id){
-    game.getItemZRState(itemState, id);
+    game.getItemZRState(itemState, targetNumber);
     return(itemState[3] != 0.00 || itemState[4] != 0.00 || itemState[5] != 0.00);
 }
 
@@ -199,8 +199,8 @@ bool packInTheirZone(int id){
 
 void getMyPos() {
     api.getMyZRState(myState);
-    for(int i = 0; i < 3; i++, myPos[i] = myState[i]);
-    //copyArray(myState, myPos, 0, 3);
+    //for(int i = 0; i < 3; i++, myPos[i] = myState[i]);
+    copyArray(myState, myPos, 0, 3);
 }
 
 /*we get our position*/
@@ -209,7 +209,7 @@ void getMyPos() {
 bool packInZone(){
     float temp[3];
     game.getItemLoc(temp, targetNumber);
-    return(dist(temp, ourZone) < 0.22 - zoneData[3]);
+    return(dist(temp, ourZone) < 0.05);
 }
 
 void calcPoint(){
@@ -269,7 +269,7 @@ void init(){
     index = 's';                //index starts here
     game.dropSPS();             //we drop the first SPS at our starting point
     calculated = false;
-    if(ourColor() == 'B'){
+    if(myPos[1]){
         assign(sps, -0.40, 0.40, 0.0);
     }
     else{
@@ -292,8 +292,10 @@ void loop(){
         
     if(packIsMoving(targetNumber) &&  game.getNumSPSHeld() == 0 && index != 'z')
         index = 'p';
+        
     if(game.hasItem(targetNumber) == 2 || (packIsMoving(targetNumber) && index != 's'))
         index = 'p';
+        
         switch(index){
         /*we call worthyPack to see what is the worthiest pack to pick up. If we didn't place the SPS we will go to case F and place it, 
         otherwise we will go for packs. we calculate here the virtual point or we would follow the pack if it starts moving*/
