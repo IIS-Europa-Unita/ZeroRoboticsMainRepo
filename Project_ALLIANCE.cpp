@@ -120,12 +120,12 @@ void getRank(int num) {
     game.getItemLoc(target, num);
     ranking[num] = 1/(((dist(myPos, target)*dist(myPos, target))));
     if(num == 0 || num == 1)
-            ranking[num]*= 2;
-    if(game.itemInZone(num) == 3)
+            ranking[num]*= 1.7;
+    if(game.itemInZone(num))
         ranking[num] = NULL;
     game.getItemZRState(itemState, num);
     if(packIsMoving(num)){
-        ranking[num]-=100;
+        ranking[num] = NULL;
     }
 }
 
@@ -212,7 +212,7 @@ void getMyPos() {
 bool packInZone(){
     float temp[3];
     game.getItemLoc(temp, targetNumber);
-    if(compareVector(temp, ourZone, 0.055))
+    if(dist(temp, ourZone) < 0.07)
         return true;
     else 
         return false; 
