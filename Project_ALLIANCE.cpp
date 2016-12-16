@@ -52,7 +52,7 @@ void moveTo(float* target){
     
     float curDis = dist(myState, target);
     
-    if (curDis >= 0.1){ // distance on what it really shouldnt apply forces
+    if (curDis >= 0.05){ // distance on what it really shouldnt apply forces
         if (counter % 4 == 0) api.setForces(between); //frequency of applying forces. frequency is more when number is less 
         counter++;
     }
@@ -230,7 +230,7 @@ bool rightSpeed(){
 //End page Position
 //Begin page main
 float   myState[12];            //status of the sphere
-float   myPos[3];               //our position
+float   myPos[12];               //our position
 float   itemState[12];          //state of the item
 float   itemAtt[3];             //attitude of the item
 float   pointAtt[3];            //point attitude
@@ -248,6 +248,8 @@ float   ranking[4];             //vector that is used to calculate which item is
 
 float   ourZone[3];             //our assembly zone
 float   theirZone[3];           //they assembly zone
+float   near_of_zone[3];        //point near of zone to go
+
 
 char    index;                  //switch index
 bool    calculated;             //check if the virtualPoint is calculated
@@ -318,6 +320,9 @@ void loop(){
                         first = false;
                     }
                     index = 'z';
+		    float l = dist(myPos,ourZone);
+                    for(int i =0;i < 3; i++)
+                       near_of_zone[i] = 0.11*myPos[i] / l + ourZone[i];
                 }
             }
             break;
